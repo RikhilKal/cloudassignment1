@@ -1,6 +1,7 @@
 package edu.cs.utexas.HadoopEx;
 
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
@@ -11,7 +12,7 @@ import java.util.PriorityQueue;
 import org.apache.log4j.Logger;
 
 
-public class TopKMapper extends Mapper<Text, Text, Text, IntWritable> {
+public class TopKMapper extends Mapper<Text, Text, Text, Text> {
 
 	private Logger logger = Logger.getLogger(TopKMapper.class);
 
@@ -33,9 +34,10 @@ public class TopKMapper extends Mapper<Text, Text, Text, IntWritable> {
 			throws IOException, InterruptedException {
 
 
-		int count = Integer.parseInt(value.toString());
+		String[] splat = value.toString().split(" ");
+		float ratio = Float.parseFloat(splat[1]) / Integer.parseInt(splat[0]);
 
-		pq.add(new WordAndCount(new Text(key), new IntWritable(count)) );
+		pq.add(new WordAndCount(new Text(key), new FloatWritable(ratio)) );
 
 		if (pq.size() > 10) {
 			pq.poll();
@@ -47,7 +49,7 @@ public class TopKMapper extends Mapper<Text, Text, Text, IntWritable> {
 
 		while (pq.size() > 0) {
 			WordAndCount wordAndCount = pq.poll();
-			context.write(wordAndCount.getWord(), wordAndCount.getCount());
+			context.write(wordAndCount.getWord(), new Text(wordAndCount.getCount().toString()));
 			logger.info("TopKMapper PQ Status: " + pq.toString());
 		}
 	}

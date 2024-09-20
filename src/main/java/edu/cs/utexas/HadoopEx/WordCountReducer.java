@@ -6,17 +6,26 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
-public class WordCountReducer extends  Reducer<Text, IntWritable, Text, IntWritable> {
+public class WordCountReducer extends  Reducer<Text, Text, Text, Text> {
 
-   public void reduce(Text text, Iterable<IntWritable> values, Context context)
+   public void reduce(Text text, Iterable<Text> values, Context context)
            throws IOException, InterruptedException {
 	   
-       int sum = 0;
+        int numFlight = 0;
+        float totalDelay = 0;
        
-       for (IntWritable value : values) {
-           sum += value.get();
-       }
-       
-       context.write(text, new IntWritable(sum));
-   }
+        for (Text value : values) {
+            String[] splat = value.toString().split(" ");
+            if (splat.length == 2) {
+                try {
+                    numFlight += Integer.parseInt(splat[0]);
+                    totalDelay += Float.parseFloat(splat[1]);
+                } catch (NumberFormatException e) {
+                    continue;
+                } // do nun
+            }
+        }
+       String temp = numFlight + " " + totalDelay;
+        context.write(text, new Text(temp));
+    }
 }
